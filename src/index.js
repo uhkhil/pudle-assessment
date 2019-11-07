@@ -8,7 +8,7 @@ const path = '/api/'
 
 const app = express();
 
-healthServices.monitor();
+healthServices.monitor(5000);
 
 mongo.connect();
 
@@ -16,17 +16,18 @@ app.get(path, (req, res) => {
     res.send('Hello world');
 })
 
+app.get(path + 'fetchHealth', async (req, res) => {
+    const result = await healthServices.fetchHealth(req.query)
+    res.json(result);
+})
+
 app.get(path + 'addLocation', async (req, res) => {
-console.log('TCL: req', req);
     const result = await locationServices.addLocation(req.query)
-    console.log('TCL: result', result);
     res.json(result)
 })
 
 app.get(path + 'fetchLocations', async (req, res) => {
-console.log('TCL: req', req);
     const result = await locationServices.fetchLocations(req.query)
-    console.log('TCL: result', result);
     res.json(result)
 })
 
