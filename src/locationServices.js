@@ -7,7 +7,10 @@ const addLocation = async (query) => {
     }
 
     const type = String(query.type);
-    const coord = [parseFloat(query.lat), parseFloat(query.lon)]
+    const coord = {
+        type: 'Point',
+        coordinates: [parseFloat(query.lat), parseFloat(query.lon)]
+    }
 
     try {
 
@@ -67,7 +70,52 @@ const fetchLocations = async (query) => {
     }
 }
 
+const fetchGeoLocations = async (query) => {
+    const response = {};
+    try {
+        const coord = [parseFloat(query.lat), parseFloat(query.lon)]
+        let range = parseFloat(query.range);
+        const type = query.type;
+
+        if (!range) {
+            range = 10;
+        }
+
+        const geoQuery = {
+            $geoNear: {
+                near: {
+                    type: 'Point',
+                    coordinates: coord,
+                },
+                distanceField: 'distance',
+                maxDistance: range * 1000,
+            }
+        }
+
+        if (type) {
+            geoQuery.$geoNear.query = {
+                type: type
+            }
+        }
+
+        const aggregateQuery = [
+            geoQuery
+        ];
+        const locations = await mongo.db().collection(constants.MONGO_COLLECTION.LOCATION)
+            .aggregate(aggregateQuery)
+            .toArray();
+        response.status = true;
+        response.data = locations;
+    } catch (error) {
+        response.status = false;
+        response.message = error.toString()
+    }
+    return response;
+}
+
+
 module.exports = {
     addLocation,
-    fetchLocations
+    fetchLocations,
+    fetchGeoLocations
 }

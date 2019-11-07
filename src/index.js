@@ -31,6 +31,11 @@ app.get(path + 'fetchLocations', async (req, res) => {
     res.json(result)
 })
 
+app.get(path + 'fetchGeoLocations', async (req, res) => {
+    const result = await locationServices.fetchGeoLocations(req.query)
+    res.json(result)
+})
+
 
 app.listen(port, () => {
     console.log('server is listening now.');
