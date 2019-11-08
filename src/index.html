@@ -13,7 +13,7 @@
     <script src="https://unpkg.com/vue2-leaflet"></script>
     <style>
         .forms {
-            height: 20vh;
+            height: 100%;
         }
     </style>
 </head>
@@ -38,7 +38,7 @@
                 </div>
                 <div>
                     <label for="range">Search radius (km)</label>
-                    <input id="range" type="number" v-model="range">
+                    <input id="range" min="0.1" type="number" v-model="range">
                     <select v-model="type">
                         <option value="A">A</option>
                         <option value="B">B</option>
@@ -50,8 +50,18 @@
         <l-map ref="myMap" :center="center" @update:center="centerUpdated" :zoom="zoom" style="height: 80vh;">
             <l-tile-layer :url="url"></l-tile-layer>
             <div v-for="marker in markers">
-                <l-marker :lat-lng="marker.coord.coordinates"></l-marker>
+                <l-marker :lat-lng="marker.coord.coordinates">
+                    <l-popup>
+                        <pre>
+                            {{marker}}
+                        </pre>
+                    </l-popup>
+                </l-marker>
             </div>
+            <l-marker :lat-lng="center">
+                <l-popup>Current location</l-popup>
+            </l-marker>
+            <l-circle :lat-lng="center" :radius="range * 1000" color="lightblue" />
         </l-map>
     </div>
 </body>
@@ -62,12 +72,15 @@
         components: {
             'l-map': window.Vue2Leaflet.LMap,
             'l-tile-layer': window.Vue2Leaflet.LTileLayer,
-            'l-marker': window.Vue2Leaflet.LMarker
+            'l-marker': window.Vue2Leaflet.LMarker,
+            'l-popup': window.Vue2Leaflet.LPopup,
+            'l-circle': window.Vue2Leaflet.LCircle,
         },
         data: {
             message: 'Test',
             url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-            apiUrl: 'https://pudle-paperplane.herokuapp.com/api',
+            apiUrl: 'http://localhost:8000/api',
+            // apiUrl: 'https://pudle-paperplane.herokuapp.com/api',
             center: [18.5368382, 73.8948146],
             zoom: 13,
             markers: [],
@@ -82,23 +95,20 @@
         methods: {
             setCenter: function () {
                 this.center = [this.lat, this.lon]
-                console.log('TCL: this.center', this.center);
             },
             addLocation: function () {
                 fetch(
                         `${this.apiUrl}/addLocation?lat=${this.latAdd}&lon=${this.lonAdd}&type=${this.typeAdd}`
                     )
                     .then(res => res.json())
-                    .then(res => {
-                        console.log('TCL: res', res);
-                    })
+                    .then(res => {})
             },
             centerUpdated: function (center) {
-                console.log('TCL: center', center);
                 this.lat = center.lat;
                 this.lon = center.lng;
                 this.latAdd = center.lat;
                 this.lonAdd = center.lng;
+                this.center = [center.lat, center.lng];
             },
             fetchGeoLocations: function () {
                 fetch(
@@ -106,7 +116,6 @@
                     )
                     .then(res => res.json())
                     .then(res => {
-                        console.log('TCL: res', res);
                         this.markers = res.data;
                     })
             }
